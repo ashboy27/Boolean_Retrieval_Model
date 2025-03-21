@@ -2,49 +2,61 @@ import re
 import nltk
 from nltk.stem import PorterStemmer
 
+# Download necessary NLTK resources
 nltk.download('punkt', quiet=True)
 
 class Pipeline:
+    """
+    A text processing pipeline that includes tokenization, stop-word removal, and stemming.
+    """
     def __init__(self):
         self.stemmer = PorterStemmer()
 
     def tokenize_only(self, text):
-        """Tokenize text without stemming"""
-        tokens = re.findall(r'\w+', text.lower())
-        return tokens
+        """
+        Tokenize text by extracting words while converting to lowercase.
+        Removes punctuation and special characters.
+        """
+        return re.findall(r'\w+', text.lower())
     
     def stemming(self, tokens):
-        """Apply stemming to a list of tokens"""
-        stemmed_tokens = [self.stemmer.stem(word) for word in tokens]
-        return stemmed_tokens
+        """
+        Apply stemming to a list of tokens using Porter Stemmer.
+        """
+        return [self.stemmer.stem(word) for word in tokens]
         
     def process_text(self, file_path):
-    
-        with open(file_path, 'r', encoding='utf-8', errors='replace') as file:
-            text = file.read()
+        """
+        Process a text file: Tokenization, stop-word removal, and stemming.
+        """
+        try:
+            # Read file content
+            with open(file_path, 'r', encoding='utf-8', errors='replace') as file:
+                text = file.read()
+            
+            # Load stop words
+            with open("StopWords.txt", 'r', encoding='utf-8', errors='replace') as file:
+                stop_words = set(file.read().splitlines())
+            
+            # Tokenize and stem
+            tokens = self.tokenize_only(text)
+            stemmed_tokens = self.stemming(tokens)
+
+            # Remove stop words
+            filtered_tokens = [word for word in stemmed_tokens if word not in stop_words]
+
+            return filtered_tokens
         
-        with open("StopWords.txt",'r', encoding='utf-8', errors='replace') as file:
-            stop_words = file.read().splitlines()
-        
-    
-        #print(f"Raw text from {file_path}: {text[:200]}")  # Debugging
+        except FileNotFoundError:
+            print(f"Error: File {file_path} not found.")
+            return []
+        except Exception as e:
+            print(f"Error processing {file_path}: {e}")
+            return []
 
-        tokens = self.tokenize_only(text)
-        #print(f"Tokens: {tokens[:20]}")  # Debugging
-
-        stemmed_tokens = self.stemming(tokens)
-        for words in stemmed_tokens:
-            if words in stop_words:
-                stemmed_tokens.remove(words)
-
-        
-        #print(f"Stemmed Tokens: {stemmed_tokens[:20]}")  # Debugging
-
-        return stemmed_tokens
-
-    
     def process_query(self, query_text):
-        """Process a query string"""
+        """
+        Process a query string: Tokenization and stemming.
+        """
         tokens = self.tokenize_only(query_text)
-        stemmed_tokens = self.stemming(tokens)
-        return stemmed_tokens
+        return self.stemming(tokens)
